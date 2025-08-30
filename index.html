@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download & Embed Generator V2</title>
+    <style>
+      :root {
+        --bg-color: #121212;
+        --surface-color: #1e1e1e;
+        --primary-color: #bb86fc;
+        --primary-variant: #3700b3;
+        --secondary-color: #03dac6;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --focus-ring-color: rgba(187, 134, 252, 0.4);
+        --danger-color: #cf6679;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background-color: var(--surface-color);
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: var(--secondary-color);
+        font-weight: 600;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9em;
+        color: #bbbbbb;
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        padding: 12px;
+        background-color: #2c2c2c;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-color);
+        font-size: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      .input:focus,
+      .select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px var(--focus-ring-color);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        color: #121212;
+      }
+
+      .button.primary {
+        background-color: var(--primary-color);
+      }
+      .button.secondary {
+        background-color: var(--secondary-color);
+      }
+      .button.danger {
+        background-color: var(--danger-color);
+        color: white;
+      }
+
+      #server-blocks {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+      }
+
+      .server-block {
+        background-color: #2a2a2a;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: box-shadow 0.3s;
+      }
+      .server-block:focus-within {
+        box-shadow: 0 0 0 2px var(--primary-color);
+      }
+
+      .server-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .server-header h3 {
+        color: var(--secondary-color);
+      }
+
+      .episode-block {
+        background-color: #333333;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+      }
+
+      .episode-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .grid-2 {
+        display: grid;
+        gap: 15px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 600px) {
+        .grid-2 {
+          grid-template-columns: 100px 1fr;
+        }
+      }
+
+      .download-links-container {
+        margin-top: 20px;
+      }
+      .download-link-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 120px auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .output-area {
+        width: 100%;
+        min-height: 250px;
+        font-family: "Fira Code", "Courier New", monospace;
+        font-size: 0.9em;
+        white-space: pre-wrap;
+        word-break: break-all;
+        background-color: #161616;
+        margin-top: 10px;
+      }
+
+      .main-actions {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      @media (min-width: 600px) {
+        .main-actions {
+          flex-direction: row;
+          justify-content: space-between;
+        }
+      }
+
+      #add-server-btn {
+        width: 100%;
+      }
+      @media (min-width: 600px) {
+        #add-server-btn {
+          width: auto;
+        }
+      }
+
+      .toast {
+        position: fixed;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--secondary-color);
+        color: var(--bg-color);
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-weight: bold;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: bottom 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        z-index: 1000;
+      }
+
+      .toast.show {
+        bottom: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Download & Embed Generator V2</h2>
+
+      <div id="server-blocks">
+        <!-- Server blocks will be added here by JavaScript -->
+      </div>
+
+      <div class="main-actions">
+        <button type="button" id="add-server-btn" class="button secondary">
+          Tambah Server
+        </button>
+        <div style="display: flex; gap: 15px">
+          <button
+            type="button"
+            id="generate-btn"
+            class="button primary"
+            style="flex-grow: 1"
+          >
+            Generate HTML
+          </button>
+          <button
+            type="button"
+            id="copy-btn"
+            class="button secondary"
+            style="flex-grow: 1"
+          >
+            Salin Kode
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px">
+        <label for="output">Hasil Kode HTML</label>
+        <textarea id="output" class="input output-area" readonly></textarea>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const addServerBtn = document.getElementById("add-server-btn");
+        const generateBtn = document.getElementById("generate-btn");
+        const copyBtn = document.getElementById("copy-btn");
+        const serverBlocksContainer = document.getElementById("server-blocks");
+
+        let serverCount = 0;
+
+        function addServerBlock() {
+          serverCount++;
+          const serverBlock = document.createElement("div");
+          serverBlock.className = "server-block";
+          serverBlock.innerHTML = `
+                    <div class="server-header">
+                        <h3>Server ${serverCount}</h3>
+                        <button type="button" class="button danger remove-server-btn">Hapus Server</button>
+                    </div>
+                    <div>
+                        <label>Nama Server Tab</label>
+                        <input type="text" class="input server-name" value="Server ${serverCount}">
+                    </div>
+                    <div class="episode-list" style="margin-top: 20px;">
+                        <!-- Episode blocks will be added here -->
+                    </div>
+                    <button type="button" class="button secondary add-episode-btn" style="margin-top: 15px;">Tambah Episode</button>
+                `;
+          serverBlocksContainer.appendChild(serverBlock);
+          addEpisodeRow(serverBlock.querySelector(".episode-list"));
+        }
+
+        function addEpisodeRow(container) {
+          const episodeBlock = document.createElement("div");
+          episodeBlock.className = "episode-block";
+          episodeBlock.innerHTML = `
+                    <div class="episode-header">
+                        <h4>Episode</h4>
+                        <button type="button" class="button danger remove-episode-btn" style="padding: 6px 10px; font-size: 0.8rem;">Hapus Episode</button>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <label>Nomor</label>
+                            <input type="text" class="input episode-number" placeholder="01">
+                        </div>
+                        <div>
+                            <label>URL Embed</label>
+                            <input type="url" class="input embed-url" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="download-links-container">
+                        <h5 style="margin-top: 15px; margin-bottom: 10px;">Link Download Episode Ini</h5>
+                        <!-- Download link rows will be added here -->
+                    </div>
+                    <button type="button" class="button secondary add-download-btn" style="padding: 8px 12px; font-size: 0.9rem;">Tambah Link Download</button>
+                `;
+          container.appendChild(episodeBlock);
+          addDownloadLinkRow(
+            episodeBlock.querySelector(".download-links-container")
+          );
+        }
+
+        function addDownloadLinkRow(container) {
+          const downloadRow = document.createElement("div");
+          downloadRow.className = "download-link-row";
+          const serverName = container
+            .closest(".server-block")
+            .querySelector(".server-name").value;
+          downloadRow.innerHTML = `
+                    <input type="text" class="input download-source" placeholder="Sumber" value="${serverName}">
+                    <input type="url" class="input download-url" placeholder="URL Download">
+                    <select class="select download-quality">
+                        <option>1080p</option>
+                        <option>HD</option>
+                        <option selected>720p</option>
+                        <option>480p</option>
+                        <option>360p</option>
+                    </select>
+                    <button type="button" class="button danger remove-download-btn" style="padding: 8px;">X</button>
+                `;
+          container.appendChild(downloadRow);
+        }
+
+        addServerBtn.addEventListener("click", addServerBlock);
+        generateBtn.addEventListener("click", generateCode);
+        copyBtn.addEventListener("click", copyCode);
+
+        serverBlocksContainer.addEventListener("click", (e) => {
+          const target = e.target;
+          if (target.classList.contains("remove-server-btn")) {
+            target.closest(".server-block").remove();
+          }
+          if (target.classList.contains("add-episode-btn")) {
+            addEpisodeRow(target.previousElementSibling);
+          }
+          if (target.classList.contains("remove-episode-btn")) {
+            target.closest(".episode-block").remove();
+          }
+          if (target.classList.contains("add-download-btn")) {
+            addDownloadLinkRow(target.previousElementSibling);
+          }
+          if (target.classList.contains("remove-download-btn")) {
+            target.closest(".download-link-row").remove();
+          }
+        });
+
+        addServerBlock();
+      });
+
+      function generateCode() {
+        const serverBlocks = document.querySelectorAll(".server-block");
+        if (serverBlocks.length === 0) {
+          document.getElementById("output").value =
+            "Tambahkan minimal satu server.";
+          return;
+        }
+
+        let tabsHtml = "";
+        let embedsHtml = "";
+        let downloadsHtml = "";
+        let globalEpisodeIdCounter = 0;
+
+        serverBlocks.forEach((serverBlock, serverIndex) => {
+          const serverName = serverBlock
+            .querySelector(".server-name")
+            .value.trim();
+
+          // Build Tab
+          const isOpen = serverIndex === 0 ? ' id="serverOpen"' : "";
+          tabsHtml += `    <span class="tablinks"${isOpen} onclick="openCity(event, '${serverName}')">${serverName}</span>\n`;
+
+          let episodeListItems = "";
+          const episodeBlocks = serverBlock.querySelectorAll(".episode-block");
+
+          episodeBlocks.forEach((episodeBlock) => {
+            globalEpisodeIdCounter++;
+            const episodeNumber = episodeBlock
+              .querySelector(".episode-number")
+              .value.trim();
+            const embedUrl = episodeBlock
+              .querySelector(".embed-url")
+              .value.trim();
+            const dataId = `Server-${globalEpisodeIdCounter}`;
+
+            if (episodeNumber && embedUrl) {
+              // Build Episode <li>
+              episodeListItems += `      <li>\n`;
+              episodeListItems += `        <div class="DagPlayOpt" data-embed="${embedUrl}" data-id="${dataId}">\n`;
+              episodeListItems += `          <span>${episodeNumber}</span> </div>\n`;
+              episodeListItems += `      </li>\n`;
+
+              // Build corresponding Download Block for this episode
+              let downloadRowsHtml = "";
+              const downloadRows =
+                episodeBlock.querySelectorAll(".download-link-row");
+              downloadRows.forEach((row) => {
+                const source = row
+                  .querySelector(".download-source")
+                  .value.trim();
+                const url = row.querySelector(".download-url").value.trim();
+                const quality = row.querySelector(".download-quality").value;
+                if (source && url) {
+                  downloadRowsHtml += `        <tr>\n`;
+                  downloadRowsHtml += `          <td><span class="num"></span> ${source}</td>\n`;
+                  downloadRowsHtml += `          <td>Sub</td>\n`;
+                  downloadRowsHtml += `          <td><span>${quality}</span></td>\n`;
+                  downloadRowsHtml += `          <td><a class="btn sm rnd" href="${url}" rel="nofollow" target="_blank">Download</a></td>\n`;
+                  downloadRowsHtml += `        </tr>\n`;
+                }
+              });
+
+              if (downloadRowsHtml) {
+                downloadsHtml += `<div class="resIn" id="${dataId}"> \n`;
+                downloadsHtml += `  <div class="download-links">\n`;
+                downloadsHtml += `    <table>\n`;
+                downloadsHtml += `      <thead>\n        <tr>\n          <th>Server</th>\n          <th>Subtitle</th>\n          <th>Kualitas</th>\n          <th>Link</th>\n        </tr>\n      </thead>\n`;
+                downloadsHtml += `      <tbody>\n${downloadRowsHtml}      </tbody>\n`;
+                downloadsHtml += `    </table>\n  </div>\n</div>\n\n`;
+              }
+            }
+          });
+
+          if (episodeListItems) {
+            embedsHtml += `  <div id="server">\n`;
+            embedsHtml += `    <ul id="${serverName}" class="serverEpisode">\n`;
+            embedsHtml += episodeListItems;
+            embedsHtml += `    </ul>\n`;
+            embedsHtml += `  </div>\n`;
+          }
+        });
+
+        const finalHtml = `<div class="server_option">
+  <div class="tabs servers">
+${tabsHtml.trimEnd()}
+  </div>
+${embedsHtml.trimEnd()}
+</div>
+
+${downloadsHtml.trimEnd()}`;
+
+        document.getElementById("output").value = finalHtml;
+        showToast("Kode HTML berhasil digenerate!");
+      }
+
+      function copyCode() {
+        const outputTextarea = document.getElementById("output");
+        if (
+          !outputTextarea.value ||
+          outputTextarea.value.startsWith("Tambahkan minimal")
+        ) {
+          showToast("Tidak ada kode untuk disalin.", true);
+          return;
+        }
+        navigator.clipboard
+          .writeText(outputTextarea.value)
+          .then(() => {
+            showToast("Kode berhasil disalin!");
+          })
+          .catch(() => {
+            showToast("Gagal menyalin. Coba salin manual.", true);
+          });
+      }
+
+      function showToast(message, isError = false) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.style.backgroundColor = isError
+          ? "var(--danger-color)"
+          : "var(--secondary-color)";
+        toast.style.color = isError ? "#ffffff" : "#000000";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      }
+    </script>
+  </body>
+</html>
